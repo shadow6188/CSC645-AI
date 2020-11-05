@@ -63,6 +63,16 @@ class ValueIterationAgent(ValueEstimationAgent):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
 
+        for iteration in range(self.iterations):  # for number of iterations
+            for state in self.mdp.getStates():  # for all states
+                if self.mdp.isTermenal(state):  # if state is terminal
+                    self.values[state] = 0  # value is zero
+                else:
+                    actions = self.mdp.getPossibleActions(state)
+                    if len(actions) == 0:  #if no available actions
+                        self.values[state] = 0  # i guess set value of state to zero because its stuck
+                    else:
+                        Qvalues = []  # compute the values of possible moves using previous info
 
     def getValue(self, state):
         """
@@ -77,7 +87,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        "util.raiseNotDefined()"
+        #print(self.mdp.getTransitionStatesAndProbs(state, action)) returned list with pair of (x,y) and probability
+        # So we want to get the the value of this action which will be the value of the next state times
+        # the living reward
+        values = []
+        for combo in self.mdp.getTransitionStatesAndProbs(state,action):
+            nextPositionh = combo[0]
+            probability = combo[1]
+            reward = self.mdp.getReward(state, action, nextPositionh)
+            values.append()
+
+        return 0
 
     def computeActionFromValues(self, state):
         """
@@ -89,6 +110,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+        return None
         util.raiseNotDefined()
 
     def getPolicy(self, state):
