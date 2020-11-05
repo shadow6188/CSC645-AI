@@ -31,6 +31,7 @@ import mdp, util
 from learningAgents import ValueEstimationAgent
 import collections
 
+
 class ValueIterationAgent(ValueEstimationAgent):
     """
         * Please read learningAgents.py before reading this.*
@@ -40,7 +41,8 @@ class ValueIterationAgent(ValueEstimationAgent):
         for a given number of iterations using the supplied
         discount factor.
     """
-    def __init__(self, mdp, discount = 0.9, iterations = 100):
+
+    def __init__(self, mdp, discount=0.9, iterations=100):
         """
           Your value iteration agent should take an mdp on
           construction, run the indicated number of iterations
@@ -56,30 +58,33 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.mdp = mdp
         self.discount = discount
         self.iterations = iterations
-        self.values = util.Counter() # A Counter is a dict with default 0
+        self.values = util.Counter()  # A Counter is a dict with default 0
         self.runValueIteration()
 
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
 
+        # values = util.Counter() got diffrent values than i should have when it was here bottom right corner was .23
+        # thought the values would just be replaced but it made some of the values calculated different from expected
         for iteration in range(self.iterations):  # for number of iterations
-            for state in self.mdp.getStates():  # for all states
-                if self.mdp.isTermenal(state):  # if state is terminal
-                    self.values[state] = 0  # value is zero
+            values = util.Counter()
+            states = self.mdp.getStates()
+            for state in states:  # for all states
+                actions = self.mdp.getPossibleActions(state)
+                if len(actions) == 0:  # if no legal actions
+                    values[state] = 0  # value of position is zero
                 else:
-                    actions = self.mdp.getPossibleActions(state)
-                    if len(actions) == 0:  #if no available actions
-                        self.values[state] = 0  # i guess set value of state to zero because its stuck
-                    else:
-                        Qvalues = []  # compute the values of possible moves using previous info
+                    Qvalues = [self.computeQValueFromValues(state, action) for action in actions]
+                    # compute the values of possible moves using previous info
+                    values[state] = max(Qvalues)  # value of state equals moves with greatest value
+            self.values = values
 
     def getValue(self, state):
         """
           Return the value of the state (computed in __init__).
         """
         return self.values[state]
-
 
     def computeQValueFromValues(self, state, action):
         """
@@ -88,17 +93,22 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         "util.raiseNotDefined()"
-        #print(self.mdp.getTransitionStatesAndProbs(state, action)) returned list with pair of (x,y) and probability
+        # print(self.mdp.getTransitionStatesAndProbs(state, action)) returned list with pair of (x,y) and probability
         # So we want to get the the value of this action which will be the value of the next state times
         # the living reward
         values = []
-        for combo in self.mdp.getTransitionStatesAndProbs(state,action):
-            nextPositionh = combo[0]
+        for combo in self.mdp.getTransitionStatesAndProbs(state, action):
+            nextPosition = combo[0]
             probability = combo[1]
-            reward = self.mdp.getReward(state, action, nextPositionh)
-            values.append()
+            reward = self.mdp.getReward(state, action, nextPosition)
+            #print("prob is ", probability)
+            #print("reward is ", reward)
+            #print("discount is ", self.discount)
 
-        return 0
+            values.append(probability * (self.values[nextPosition] * self.discount + reward))  # probability * (value of next state * living reward)
+
+        #print(sum(values))
+        return sum(values)
 
     def computeActionFromValues(self, state):
         """
@@ -110,8 +120,14 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        return None
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+        else:
+            actions = self.mdp.getPossibleActions(state)
+            return max(actions, key=lambda action: self.computeQValueFromValues(state, action))
+            # returns action which produces maximum q value
+
+        #util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
@@ -123,6 +139,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     def getQValue(self, state, action):
         return self.computeQValueFromValues(state, action)
 
+
 class AsynchronousValueIterationAgent(ValueIterationAgent):
     """
         * Please read learningAgents.py before reading this.*
@@ -132,7 +149,8 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
         for a given number of iterations using the supplied
         discount factor.
     """
-    def __init__(self, mdp, discount = 0.9, iterations = 1000):
+
+    def __init__(self, mdp, discount=0.9, iterations=1000):
         """
           Your cyclic value iteration agent should take an mdp on
           construction, run the indicated number of iterations,
@@ -153,6 +171,7 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
         * Please read learningAgents.py before reading this.*
@@ -161,7 +180,8 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         (see mdp.py) on initialization and runs prioritized sweeping value iteration
         for a given number of iterations using the supplied parameters.
     """
-    def __init__(self, mdp, discount = 0.9, iterations = 100, theta = 1e-5):
+
+    def __init__(self, mdp, discount=0.9, iterations=100, theta=1e-5):
         """
           Your prioritized sweeping value iteration agent should take an mdp on
           construction, run the indicated number of iterations,
@@ -172,4 +192,3 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-
