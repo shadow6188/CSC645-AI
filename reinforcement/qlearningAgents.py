@@ -10,13 +10,14 @@
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
-
+from collections import defaultdict
 
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
-import random,util,math
+import random, util, math
+
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -38,11 +39,14 @@ class QLearningAgent(ReinforcementAgent):
         - self.getLegalActions(state)
           which returns legal actions for a state
     """
+
     def __init__(self, **args):
         "You can initialize Q-values here..."
         ReinforcementAgent.__init__(self, **args)
 
         "*** YOUR CODE HERE ***"
+
+        self.Qvalues = util.Counter()
 
     def getQValue(self, state, action):
         """
@@ -51,8 +55,17 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        """
+        print(state, action)
 
+        value = self.Qvalues[(state, action)]
+        print(value)
+        print(self.Qvalues)
+        """
+        #  returns value for each state and movement pair
+        return self.Qvalues[(state, action)]  # luckily tuple for keys work
+
+        # util.raiseNotDefined()
 
     def computeValueFromQValues(self, state):
         """
@@ -62,7 +75,24 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #print("computeValue function is running")
+        actions = self.getLegalActions(state)
+        if len(actions) == 0:
+            #print("terminal")
+            return 0.0
+        else:
+            """
+            print("not terminal")
+            moves = []
+            for actions in self.getLegalActions(state):
+                moves.append(self.getQValue(state, actions))
+            print(moves)
+            return max(moves)
+            """
+            # gets q values for all moves in legal actions then returns highest value
+            return max([self.getQValue(state, action) for action in actions])
+
+        # util.raiseNotDefined()
 
     def computeActionFromQValues(self, state):
         """
@@ -71,7 +101,18 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = self.getLegalActions(state)
+
+        # print(state, "compute")
+        if len(actions) == 0:
+            # print("terminal")
+            return None
+        else:
+            # print("not terminal")
+
+            # print(max(actions, key=lambda action: self.getQValue(state, action)))
+            # same as above but returns the action instead of its accompanying value
+            return max(actions, key=lambda action: self.getQValue(state, action))
 
     def getAction(self, state):
         """
@@ -88,9 +129,12 @@ class QLearningAgent(ReinforcementAgent):
         legalActions = self.getLegalActions(state)
         action = None
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
 
-        return action
+        if util.flipCoin(self.epsilon):
+            return random.choice(legalActions)
+        else:
+            return self.computeActionFromQValues(state)
 
     def update(self, state, action, nextState, reward):
         """
@@ -102,7 +146,14 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # print(state, " update")
+        # print(self.Qvalues[(state, action)])
+        # value update from class
+        self.Qvalues[(state, action)] = (1 - self.alpha)*self.Qvalues[(state, action)] + \
+                                        self.alpha * (reward + (self.discount * self.getValue(nextState)))
+        # print(self.Qvalues[(state, action)])
+
+        # util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -114,7 +165,7 @@ class QLearningAgent(ReinforcementAgent):
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
 
-    def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
+    def __init__(self, epsilon=0.05, gamma=0.8, alpha=0.2, numTraining=0, **args):
         """
         These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
@@ -138,8 +189,8 @@ class PacmanQAgent(QLearningAgent):
         informs parent of action for Pacman.  Do not change or remove this
         method.
         """
-        action = QLearningAgent.getAction(self,state)
-        self.doAction(state,action)
+        action = QLearningAgent.getAction(self, state)
+        self.doAction(state, action)
         return action
 
 
@@ -151,6 +202,7 @@ class ApproximateQAgent(PacmanQAgent):
        and update.  All other QLearningAgent functions
        should work as is.
     """
+
     def __init__(self, extractor='IdentityExtractor', **args):
         self.featExtractor = util.lookup(extractor, globals())()
         PacmanQAgent.__init__(self, **args)
