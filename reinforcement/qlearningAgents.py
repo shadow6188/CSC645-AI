@@ -10,13 +10,14 @@
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
-from collections import defaultdict
 
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
 import random, util, math
+
+from reinforcement.featureExtractors import CoordinateExtractor
 
 
 class QLearningAgent(ReinforcementAgent):
@@ -75,10 +76,10 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        #print("computeValue function is running")
+        # print("computeValue function is running")
         actions = self.getLegalActions(state)
         if len(actions) == 0:
-            #print("terminal")
+            # print("terminal")
             return 0.0
         else:
             """
@@ -149,7 +150,7 @@ class QLearningAgent(ReinforcementAgent):
         # print(state, " update")
         # print(self.Qvalues[(state, action)])
         # value update from class
-        self.Qvalues[(state, action)] = (1 - self.alpha)*self.Qvalues[(state, action)] + \
+        self.Qvalues[(state, action)] = (1 - self.alpha) * self.Qvalues[(state, action)] + \
                                         self.alpha * (reward + (self.discount * self.getValue(nextState)))
         # print(self.Qvalues[(state, action)])
 
@@ -217,14 +218,52 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # print(self.featExtractor.getFeatures(state, action))
+
+        # counter has built in dot product handling so this should work
+        # print(self.weights[(state,action)])
+        """
+        answer = self.weights * self.featExtractor.getFeatures(state, action)
+
+        for keys in self.featExtractor.getFeatures(state, action).keys():
+            print(keys)
+            print(self.featExtractor.getFeatures(state, action)[keys])
+            print(self.weights[keys])
+        print("answer is ", answer)
+        print("-----------------------------------------------------------------------------------")
+        print("weight is ", self.weights[action, state])
+        """
+
+        return self.weights * self.featExtractor.getFeatures(state, action)
+
+
+
+        # util.raiseNotDefined()
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # print(reward)
+        # print(self.getValue(nextState))
+        #self.Qvalues[(state, action)] = self.alpha * ((reward + (self.discount * self.getValue(nextState)))- self.getQValue(state,action))
+        """
+        self.weights[(state, action)] += self.alpha * self.featExtractor.getFeatures(state, action)[(state, action)] *\
+                                         ((reward + self.discount * (self.getValue(nextState)))-self.getQValue(state, action))
+        """#didn't work because on coordinate feature extractor there is more than 1 key, and the (state,action) is not one
+        # equation for update from class worked for everything except the coordinate extractor
+
+        copy = self.featExtractor.getFeatures(state, action)
+        for value in copy:
+            #print(copy[value])
+
+            copy[value] = self.featExtractor.getFeatures(state, action)[value] *\
+                          self.alpha * (reward + self.discount * self.getValue(nextState) - self.getQValue(state, action))
+            #print(copy[value])
+        self.weights += copy
+
+        # util.raiseNotDefined()
 
     def final(self, state):
         "Called at the end of each game."
